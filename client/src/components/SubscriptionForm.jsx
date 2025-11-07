@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import PreferencesForm from './PreferencesForm';
 
 const SubscriptionForm = () => {
@@ -16,7 +16,7 @@ const SubscriptionForm = () => {
     setMessage('');
 
     try {
-      const res = await axios.post('/api/users/register', { email });
+      const res = await api.post('/api/users/register', { email });
       setMessage(res.data.msg);
       setStep('verify');
     } catch (error) {
@@ -32,7 +32,7 @@ const SubscriptionForm = () => {
     setMessage('');
 
     try {
-      const res = await axios.post('/api/users/verify', { email, code });
+      const res = await api.post('/api/users/verify', { email, code });
       setMessage(res.data.msg);
       // Reset form after successful verification
       setCode('');

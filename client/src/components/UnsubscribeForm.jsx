@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 
 const UnsubscribeForm = () => {
   const [email, setEmail] = useState('');
@@ -24,7 +24,7 @@ const UnsubscribeForm = () => {
     setMessage('');
 
     try {
-      const res = await axios.post('/api/users/unsubscribe-request', { email });
+      const res = await api.post('/api/users/unsubscribe-request', { email });
       setMessage(res.data.msg);
       setStep('verify');
     } catch (error) {
@@ -40,7 +40,7 @@ const UnsubscribeForm = () => {
     setMessage('');
 
     try {
-      const res = await axios.post('/api/users/unsubscribe', { email, code });
+      const res = await api.post('/api/users/unsubscribe', { email, code });
       setMessage(res.data.msg);
       // Reset form after successful unsubscribe
       setCode('');

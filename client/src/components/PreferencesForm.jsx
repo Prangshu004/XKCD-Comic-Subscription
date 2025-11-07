@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 
 const PreferencesForm = ({ email }) => {
   const [preferredTime, setPreferredTime] = useState('09:00');
@@ -14,7 +14,7 @@ const PreferencesForm = ({ email }) => {
       if (!email) return;
       
       try {
-        const response = await axios.get(`/api/users/preferences?email=${encodeURIComponent(email)}`);
+        const response = await api.get(`/api/users/preferences?email=${encodeURIComponent(email)}`);
         if (response.data) {
           setPreferredTime(response.data.preferredTime || '09:00');
           setPreferredDays(response.data.preferredDays || ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
@@ -43,7 +43,7 @@ const PreferencesForm = ({ email }) => {
     setMessage('');
 
     try {
-      const response = await axios.put('/api/users/preferences', {
+      const response = await api.put('/api/users/preferences', {
         email,
         preferredTime,
         preferredDays

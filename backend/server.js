@@ -31,8 +31,13 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Middleware
-app.use(cors());
+// Configure CORS to allow requests from Vercel frontend
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Allow your deployed frontend
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

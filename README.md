@@ -2,6 +2,13 @@
 
 This is a MERN stack (MongoDB, Express, React, Node.js) application that allows users to subscribe to daily XKCD comics via email. The application uses Brevo (formerly Sendinblue) for email delivery.
 
+## Architecture
+
+This application supports two deployment architectures:
+
+1. **Monolithic Deployment**: Frontend and backend deployed together
+2. **Separate Deployment**: Frontend deployed to Vercel, Backend deployed to Railway (recommended for scalability)
+
 ## Features
 
 - 📧 Email subscription with verification code
@@ -32,7 +39,7 @@ cd xkcd-mern/backend
 npm install
 ```
 
-3. Create a `.env` file in the `backend` directory and add your environment variables (see `.env.example` for reference):
+3. For **local development**, create a `.env` file in the `backend` directory and add your environment variables (see `.env.example` for reference):
 
 ```env
 # Database
@@ -48,10 +55,7 @@ PORT=5000
 NODE_ENV=development
 ```
 
-4. Start the backend server:
-```bash
-npm run dev
-```
+**For Railway deployment:** Environment variables are set in the Railway dashboard, not in .env files.
 
 ### Frontend Setup
 
@@ -65,7 +69,12 @@ cd xkcd-mern/client
 npm install
 ```
 
-3. Start the React development server:
+3. For local development, set environment variables in `.env.local`:
+```bash
+VITE_BACKEND_URL=http://localhost:5000
+```
+
+4. Start the React development server:
 ```bash
 npm run dev
 ```
@@ -99,7 +108,7 @@ Create a `.env` file in the `backend` directory with the following variables:
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database
 BREVO_API_KEY=your_production_api_key
 FROM_EMAIL=verified@yourdomain.com
-FRONTEND_URL=https://yourdomain.com
+FRONTEND_URL=https://your-frontend-domain.vercel.app
 NODE_ENV=production
 PORT=process_port_or_default
 ```
@@ -137,7 +146,26 @@ XKCD is a webcomic created by Randall Munroe that combines humor, science, math,
 
 ## Deployment
 
-The application is designed to deploy easily to Railway using the provided Dockerfile and railway.json configuration.
+### Option 1: Separate Deployment (Recommended)
+
+**Deploy Backend to Railway:**
+1. Connect your GitHub repository to Railway
+2. Set environment variables in Railway dashboard:
+   - `MONGODB_URI`
+   - `BREVO_API_KEY`
+   - `FROM_EMAIL`
+   - `FRONTEND_URL` (your Vercel domain)
+   - `NODE_ENV=production`
+
+**Deploy Frontend to Vercel:**
+1. Push your code to GitHub
+2. Connect Vercel to your GitHub repository
+3. Set environment variables in Vercel dashboard:
+   - `VITE_BACKEND_URL` (your Railway backend URL)
+
+### Option 2: Monolithic Deployment
+
+The application can also be deployed together using the provided Dockerfile and railway.json configuration.
 
 ## License
 
