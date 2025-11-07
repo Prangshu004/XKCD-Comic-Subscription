@@ -12,14 +12,14 @@ COPY backend/ ./
 
 # Copy client source and build frontend
 WORKDIR /app/client
-COPY client/ ./              # <-- this line copies all frontend files (index.html, src/, vite.config.js, etc.)
+COPY client/ ./
 RUN npm install
 RUN npm run build
 
 # Move built frontend into backend's public folder
 RUN mkdir -p /app/backend/client/dist && cp -r dist/* /app/backend/client/dist/
 
-# Set env and working directory
+# Set environment and working directory
 WORKDIR /app
 ENV NODE_ENV=production
 EXPOSE 8080
