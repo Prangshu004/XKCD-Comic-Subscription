@@ -1,31 +1,30 @@
-# Use Node.js 18 LTS as the base image
+# Use Node.js 18 LTS
 FROM node:18-alpine
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy backend package files
+# Copy backend dependencies
 COPY backend/package*.json ./
+RUN npm install --production
 
-# Install backend dependencies
-RUN npm install
+# Copy backend source
+COPY backend/ ./
 
-# Copy backend source code
-COPY backend/ .
-
-# Copy client directory
-COPY client/ ./client/
-
-# Install frontend dependencies and build the frontend
+# Copy client and build frontend
 WORKDIR /app/client
+COPY client/package*.json ./
 RUN npm install
 RUN npm run build
 
-# Go back to backend directory
+# Move built frontend to backend's static folder
+RUN mkdir -p /app/backend/client/dist && cp -r dist/* /app/backend/client/dist/
+
+# Set environment and go back
 WORKDIR /app
+ENV NODE_ENV=production
 
-# Expose the port
-EXPOSE $PORT
+# Expose Railway's port
+EXPOSE 8080
 
-# Start the application
-CMD ["npm", "start"]
+# Start the backend
+CMD ["node", "server.js"]
