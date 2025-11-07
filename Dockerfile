@@ -3,28 +3,26 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy backend dependencies
+# Copy and install backend dependencies
 COPY backend/package*.json ./
 RUN npm install --production
 
 # Copy backend source
 COPY backend/ ./
 
-# Copy client and build frontend
+# Copy client source and build frontend
 WORKDIR /app/client
-COPY client/package*.json ./
+COPY client/ ./              # <-- this line copies all frontend files (index.html, src/, vite.config.js, etc.)
 RUN npm install
 RUN npm run build
 
-# Move built frontend to backend's static folder
+# Move built frontend into backend's public folder
 RUN mkdir -p /app/backend/client/dist && cp -r dist/* /app/backend/client/dist/
 
-# Set environment and go back
+# Set env and working directory
 WORKDIR /app
 ENV NODE_ENV=production
-
-# Expose Railway's port
 EXPOSE 8080
 
-# Start the backend
+# Start backend
 CMD ["node", "server.js"]
