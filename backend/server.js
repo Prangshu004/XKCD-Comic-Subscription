@@ -52,8 +52,12 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));
 }
 
+// Routes
+app.use('/api/users', require('./src/routes/userRoutes'));
+app.use('/api/xkcd', require('./src/routes/xkcdRoutes'));
+
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
@@ -61,10 +65,6 @@ app.get('/health', (req, res) => {
     message: 'XKCD Comic Subscription API is running'
   });
 });
-
-// Routes
-app.use('/api/users', require('./src/routes/userRoutes'));
-app.use('/api/xkcd', require('./src/routes/xkcdRoutes'));
 
 // Serve the frontend in production
 if (process.env.NODE_ENV === 'production') {
