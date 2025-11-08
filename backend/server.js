@@ -52,6 +52,16 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));
 }
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    message: 'XKCD Comic Subscription API is running'
+  });
+});
+
 // Routes
 app.use('/api/users', require('./src/routes/userRoutes'));
 app.use('/api/xkcd', require('./src/routes/xkcdRoutes'));
