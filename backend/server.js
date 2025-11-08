@@ -10,6 +10,9 @@ dotenv.config();
 
 const app = express();
 
+// Trust the first proxy (Railway, Vercel, etc.)
+app.set('trust proxy', 1);
+
 // Rate limiting middleware
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
