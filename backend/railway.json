@@ -1,14 +1,14 @@
 {
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
-    "rootDirectory": "backend",
+    "builder": "RAILPACK",
     "buildCommand": "npm install",
     "startCommand": "npm start"
   },
   "deploy": {
     "restartPolicy": {
       "type": "on-failure",
-      "maximumRetryCount": 5
+      "maximumRetryCount": 10
     }
   }
 }
