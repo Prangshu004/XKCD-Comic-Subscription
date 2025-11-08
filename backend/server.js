@@ -10,7 +10,7 @@ dotenv.config();
 
 const app = express();
 
-// Trust the first proxy (Railway, Vercel, etc.)
+// Trust the first proxy (Railway etc.)
 app.set('trust proxy', 1);
 
 // Rate limiting middleware
