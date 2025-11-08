@@ -10,7 +10,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://xkcd-comic-subscription-production.up.railway.app',
+        target: 'localhost:5000',
         changeOrigin: true,
         secure: false,
       }
