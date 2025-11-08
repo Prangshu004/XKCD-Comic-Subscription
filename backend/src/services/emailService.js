@@ -3,24 +3,32 @@ const nodemailer = require('nodemailer');
 
 class EmailService {
   constructor() {
-    // Initialize Brevo API with API key using the correct modern approach
+    console.log('🚀 Initializing EmailService...');
+    console.log('🪵 DEBUG LOG → ENV check:');
+    console.log('   BREVO_API_KEY exists:', !!process.env.BREVO_API_KEY);
+    console.log('   BREVO_SMTP_USER:', process.env.BREVO_SMTP_USER ? '✅ Set' : '❌ Missing');
+    console.log('   BREVO_SMTP_PASS:', process.env.BREVO_SMTP_PASS ? '✅ Set' : '❌ Missing');
+    console.log('   FROM_EMAIL:', process.env.FROM_EMAIL || 'default@domain.com');
+    console.log('   FRONTEND_URL:', process.env.FRONTEND_URL || '⚠️ Not set');
+
+    // Initialize Brevo API
     if (process.env.BREVO_API_KEY) {
       try {
-        // Create TransactionalEmailsApi instance directly
+        console.log('🔑 Using Brevo API key...');
         this.emailApi = new brevo.TransactionalEmailsApi();
-        // Set API key using the correct method
         this.emailApi.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
+        console.log('✅ Brevo API initialized successfully.');
       } catch (error) {
-        console.error('Error initializing Brevo API:', error.message);
-        // Fallback to SMTP only
+        console.error('❌ Error initializing Brevo API:', error.message);
         this.emailApi = null;
       }
     } else {
-      // No API key configured, use SMTP only
+      console.warn('⚠️ BREVO_API_KEY not found. Falling back to SMTP only.');
       this.emailApi = null;
     }
-    
+
     // Initialize SMTP transporter as fallback
+    console.log('🛜 Setting up SMTP transporter...');
     this.smtpTransporter = nodemailer.createTransport({
       host: process.env.BREVO_SMTP_HOST || process.env.SMTP_HOST || 'smtp-relay.brevo.com',
       port: process.env.BREVO_SMTP_PORT || process.env.SMTP_PORT || 587,
@@ -30,15 +38,21 @@ class EmailService {
         pass: process.env.BREVO_SMTP_PASS || process.env.SMTP_PASS
       }
     });
+
+    console.log('✅ SMTP transporter ready.');
   }
 
+  // ------------------- VERIFICATION EMAIL -------------------
   async sendVerificationEmail(email, code) {
+    console.log(`📨 Preparing verification email for ${email}...`);
+
     const subject = 'Your Verification Code';
     const html = `<p>Your verification code is: <strong>${code}</strong></p>`;
-    
-    // Try Brevo API first if API key is available
+
+    // Try Brevo API first
     if (this.emailApi && process.env.BREVO_API_KEY) {
       try {
+        console.log('📡 Attempting to send via Brevo API...');
         const sendSmtpEmail = new brevo.SendSmtpEmail();
         sendSmtpEmail.to = [{ email, name: email }];
         sendSmtpEmail.subject = subject;
@@ -49,75 +63,61 @@ class EmailService {
         };
 
         const result = await this.emailApi.sendTransacEmail(sendSmtpEmail);
-        console.log('Verification email sent via Brevo API successfully');
+        console.log('✅ Verification email sent via Brevo API successfully:', result?.messageId || '[No messageId]');
         return true;
       } catch (error) {
-        console.error('Brevo API failed, falling back to SMTP:', error.message);
+        console.error('❌ Brevo API failed:', error.message);
+        console.error('🪵 DEBUG LOG: Error details →', error.response?.body || error);
       }
     }
-    
+
     // Fallback to SMTP
     try {
+      console.log('📬 Falling back to SMTP...');
       const result = await this.smtpTransporter.sendMail({
         from: process.env.FROM_EMAIL || 'no-reply@example.com',
         to: email,
-        subject: subject,
-        html: html
+        subject,
+        html
       });
-
-      console.log('Verification email sent via SMTP successfully:', result.messageId);
+      console.log('✅ Verification email sent via SMTP:', result.messageId);
       return true;
     } catch (error) {
-      console.error('SMTP fallback failed:', error);
+      console.error('❌ SMTP fallback failed:', error);
       return false;
     }
   }
 
+  // ------------------- COMIC EMAIL -------------------
   async sendXKCDComicEmail(email, comicData, unsubscribeToken = null) {
+    console.log(`🎨 Preparing XKCD comic email for ${email}...`);
+    
     const subject = 'Your XKCD Comic';
-    
-    // Warn if FRONTEND_URL is not configured
-    if (!process.env.FRONTEND_URL) {
-      console.warn('WARNING: FRONTEND_URL not configured in environment variables. Unsubscribe links may not work correctly.');
-    }
-    
-    // Create an unsubscribe link with token if available, otherwise use email parameter
+
     let unsubscribeLink;
     if (unsubscribeToken) {
-      // Secure unsubscribe link with token
       unsubscribeLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/api/users/unsubscribe-token/${unsubscribeToken}`;
     } else {
-      // Fallback to email parameter method
       unsubscribeLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/unsubscribe?email=${encodeURIComponent(email)}`;
     }
-    
-    // Check if unsubscribeLink is valid
-    if (unsubscribeLink && !unsubscribeLink.startsWith('http')) {
-      console.warn('WARNING: Unsubscribe link may be invalid due to missing FRONTEND_URL:', unsubscribeLink);
-    }
-    
+
+    console.log('🪵 DEBUG LOG → Unsubscribe link generated:', unsubscribeLink);
+
     const html = `
       <h2>XKCD Comic</h2>
       <h3>${comicData.title}</h3>
       <img src="${comicData.img}" alt="XKCD Comic" style="max-width: 100%; height: auto;">
       <p>${comicData.alt || ''}</p>
-      <p><a href="${unsubscribeLink}" id="unsubscribe-button" style="
-        display: inline-block;
-        padding: 10px 20px;
-        background: linear-gradient(135deg, #EF476F, #FF7096);
-        color: white;
-        text-decoration: none;
-        border-radius: 5px;
-        font-weight: bold;
-        margin-top: 15px;
+      <p><a href="${unsubscribeLink}" style="
+        display:inline-block; padding:10px 20px;
+        background:linear-gradient(135deg,#EF476F,#FF7096);
+        color:white; text-decoration:none; border-radius:5px;
       ">Unsubscribe</a></p>
     `;
-    
-    
-    
-    // Try Brevo API first if API key is available
+
     if (this.emailApi && process.env.BREVO_API_KEY) {
       try {
+        console.log('📡 Attempting to send comic via Brevo API...');
         const sendSmtpEmail = new brevo.SendSmtpEmail();
         sendSmtpEmail.to = [{ email, name: email }];
         sendSmtpEmail.subject = subject;
@@ -128,37 +128,40 @@ class EmailService {
         };
 
         const result = await this.emailApi.sendTransacEmail(sendSmtpEmail);
-        console.log('XKCD comic email sent via Brevo API successfully:', result);
+        console.log('✅ Comic email sent via Brevo API successfully');
         return true;
       } catch (error) {
-        console.error('Brevo API failed, falling back to SMTP:', error.message);
+        console.error('❌ Brevo API failed for comic email:', error.message);
+        console.error('🪵 DEBUG LOG: Error details →', error.response?.body || error);
       }
     }
-    
+
     // Fallback to SMTP
     try {
+      console.log('📬 Falling back to SMTP for comic...');
       const result = await this.smtpTransporter.sendMail({
         from: process.env.FROM_EMAIL || 'no-reply@example.com',
         to: email,
-        subject: subject,
-        html: html
+        subject,
+        html
       });
-
-      console.log('XKCD comic email sent via SMTP successfully:', result.messageId);
+      console.log('✅ Comic email sent via SMTP successfully:', result.messageId);
       return true;
     } catch (error) {
-      console.error('SMTP fallback failed:', error);
+      console.error('❌ SMTP fallback failed for comic:', error);
       return false;
     }
   }
 
+  // ------------------- UNSUBSCRIBE EMAIL -------------------
   async sendUnsubscribeVerificationEmail(email, code) {
+    console.log(`📨 Preparing unsubscription verification email for ${email}...`);
     const subject = 'Confirm Un-subscription';
     const html = `<p>To confirm un-subscription, use this code: <strong>${code}</strong></p>`;
-    
-    // Try Brevo API first if API key is available
+
     if (this.emailApi && process.env.BREVO_API_KEY) {
       try {
+        console.log('📡 Attempting to send unsubscribe email via Brevo API...');
         const sendSmtpEmail = new brevo.SendSmtpEmail();
         sendSmtpEmail.to = [{ email, name: email }];
         sendSmtpEmail.subject = subject;
@@ -169,26 +172,26 @@ class EmailService {
         };
 
         const result = await this.emailApi.sendTransacEmail(sendSmtpEmail);
-        console.log('Unsubscribe verification email sent via Brevo API successfully');
+        console.log('✅ Unsubscribe verification email sent via Brevo API successfully');
         return true;
       } catch (error) {
-        console.error('Brevo API failed, falling back to SMTP:', error.message);
+        console.error('❌ Brevo API failed for unsubscribe email:', error.message);
+        console.error('🪵 DEBUG LOG: Error details →', error.response?.body || error);
       }
     }
-    
-    // Fallback to SMTP
+
     try {
+      console.log('📬 Falling back to SMTP for unsubscribe...');
       const result = await this.smtpTransporter.sendMail({
         from: process.env.FROM_EMAIL || 'no-reply@example.com',
         to: email,
-        subject: subject,
-        html: html
+        subject,
+        html
       });
-
-      console.log('Unsubscribe verification email sent via SMTP successfully!');
+      console.log('✅ Unsubscribe verification email sent via SMTP:', result.messageId);
       return true;
     } catch (error) {
-      console.error('SMTP fallback failed:', error);
+      console.error('❌ SMTP fallback failed for unsubscribe:', error);
       return false;
     }
   }
